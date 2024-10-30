@@ -57,6 +57,14 @@ export type CardStatsHorizontalWithBorderProps = {
   color?: ThemeColor
 }
 
+export type CardStatsHorizontalWithBorderPropsWithMoney = {
+  title: string
+  stats: number
+  isMoney?: boolean
+  avatarIcon: string
+  color?: ThemeColor
+}
+
 export type CardStatsCustomerStatsProps = {
   title: string
   avatarIcon: string

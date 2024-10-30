@@ -69,9 +69,6 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <MenuItem href='/home' icon={<i className='ri-home-smile-line' />}>
-          Dashboard
-        </MenuItem>
-        <MenuItem href='/inventory' icon={<i className='ri-home-smile-line' />}>
           Inventory
         </MenuItem>
         <MenuItem href='/items' icon={<i className='ri-home-smile-line' />}>
