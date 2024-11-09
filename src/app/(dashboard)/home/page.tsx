@@ -1,57 +1,70 @@
-import type {
-  CardStatsHorizontalWithBorderPropsWithMoney
-} from "@/types/pages/widgetTypes";
+'use client'
+
+import axios from "axios";
 import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/home/LogisticsStatisticsCardEvolved";
 import InventoryTable from "@/app/(dashboard)/home/InventoryTable";
-
-const statistics : CardStatsHorizontalWithBorderPropsWithMoney[]  = [
-  {
-    title: "Inventory Items",
-    stats: 0,
-    avatarIcon: "ri-box-1-fill",
-    color: "primary"
-  },
-  {
-    title: "(Stock) Finished Products",
-    stats: 0,
-    avatarIcon: "ri-beer-line",
-    color: "success"
-  },
-  {
-    title: "Purchase Orders (Pendind Delivery)",
-    stats: 0,
-    avatarIcon: "ri-ship-2-line",
-    color: "info"
-  },
-  {
-    title: "Inventory Alerts",
-    stats: 0,
-    avatarIcon: "ri-alert-line",
-    color: "error"
-  },
-  {
-    title: "Inventory Price",
-    stats: 0.00,
-    isMoney: true,
-    avatarIcon: "ri-money-euro-circle-line",
-    color: "info"
-  }
-];
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 const Page = () => {
+  const { data: session, status } = useSession(); // Get session and status
+  const [statistics, setStatistics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Ensure session is loaded and available
+    //@ts-ignore
+    if (status === "authenticated" && session?.accessToken) {
+      const fetchData = async () => {
+        try {
+          // Fetch data from API with Authorization header
+          const response = await axios.get("http://localhost:8080/api/aggregator", {
+            headers: {
+              //@ts-ignore
+              Authorization: `Bearer ${session.accessToken}`, // Use template literals
+            },
+          });
+
+          setStatistics(response.data);
+          setLoading(false); // Done loading
+        } catch (err) {
+          // @ts-ignore
+          setError(err);
+          setLoading(false); // Done loading even in case of error
+        }
+      };
+      fetchData();
+    } else if (status === "unauthenticated") {
+      setLoading(false); // Set loading to false if user is not authenticated
+      // @ts-ignore
+      setError(new Error("User is not authenticated"));
+    }
+  }, [session, status]); // Run effect only when session or status changes
+
+  // Loading state
+  if (loading) {
+    return <div>Loading...</div>; // Show loading message or spinner
+  }
+
+  // Error state
+  if (error) {
+    // @ts-ignore
+    return <div>Error: {error.message}</div>; // Handle error if there's any
+  }
+
   return (
     <div>
       <h1>Inventory Dashboard</h1>
       <p>Management Board</p>
-      <p><span className={"text-xs"}>Last Update: 27/10/2024 18:54:10</span></p>
-    <br />
+      <br />
 
-      <LogisticsStatisticsCardEvolved data={statistics} />
+      {/* Pass fetched data to child components */}
+      {statistics && <LogisticsStatisticsCardEvolved data={statistics} />}
       <br />
       <InventoryTable />
-
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;
