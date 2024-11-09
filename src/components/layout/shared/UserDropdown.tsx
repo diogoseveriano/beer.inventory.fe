@@ -22,6 +22,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
 // Hook Imports
+import {signOut, useSession} from "next-auth/react";
+
 import { useSettings } from '@core/hooks/useSettings'
 
 // Styled component for badge content
@@ -35,14 +37,19 @@ const BadgeContentSpan = styled('span')({
 })
 
 const UserDropdown = () => {
+  const { data: session } = useSession();
+
+  // Hooks
+  const router = useRouter()
+
+  const username = session?.user?.name || 'Default User';
+  const email = session?.user?.email || 'default@domain.com';
+
   // States
   const [open, setOpen] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLDivElement>(null)
-
-  // Hooks
-  const router = useRouter()
 
   const { settings } = useSettings()
 
@@ -64,7 +71,7 @@ const UserDropdown = () => {
 
   const handleUserLogout = async () => {
     // Redirect to login page
-    router.push('/login')
+    signOut({ callbackUrl: "/" })
   }
 
   return (
@@ -78,7 +85,7 @@ const UserDropdown = () => {
       >
         <Avatar
           ref={anchorRef}
-          alt='John Doe'
+          alt={username}
           src='/images/avatars/1.png'
           onClick={handleDropdownOpen}
           className='cursor-pointer bs-[38px] is-[38px]'
@@ -109,9 +116,9 @@ const UserDropdown = () => {
                     <Avatar alt='John Doe' src='/images/avatars/1.png' />
                     <div className='flex items-start flex-col'>
                       <Typography variant='body2' className='font-medium' color='text.primary'>
-                        John Doe
+                        {username}
                       </Typography>
-                      <Typography variant='caption'>admin@materialize.com</Typography>
+                      <Typography variant='caption'>{email}</Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />

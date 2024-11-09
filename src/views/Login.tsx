@@ -20,6 +20,7 @@ import Divider from '@mui/material/Divider'
 import classnames from 'classnames'
 
 // Type Imports
+import {signIn} from "next-auth/react";
 import type { Mode } from '@core/types'
 
 // Component Imports
@@ -60,6 +61,26 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
+  const [email, setEmail] = useState('test@test.pt');
+  const [password, setPassword] = useState('test');
+
+  const login = async (e) => {
+    e.preventDefault();
+    const result = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (result?.ok) {
+      console.log('Logged in successfully');
+      router.push('/');
+    } else {
+      console.error('Login failed:', result.error);
+      alert('Login failed: ' + result.error);
+    }
+  };
+
   return (
     <div className='flex bs-full justify-center'>
       <div
@@ -92,8 +113,7 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
             noValidate
             autoComplete='off'
             onSubmit={e => {
-              e.preventDefault()
-              router.push('/')
+              login(e);
             }}
             className='flex flex-col gap-5'
           >

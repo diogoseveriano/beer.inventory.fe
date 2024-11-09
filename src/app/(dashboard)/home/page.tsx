@@ -39,7 +39,6 @@ const statistics : CardStatsHorizontalWithBorderPropsWithMoney[]  = [
 ];
 
 const Page = () => {
-
   return (
     <div>
       <h1>Inventory Dashboard</h1>

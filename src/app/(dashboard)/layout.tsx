@@ -20,8 +20,9 @@ import ScrollToTop from '@core/components/scroll-to-top'
 
 // Util Imports
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
+import CheckLogStatus from "@components/CheckLogStatus";
 
-const Layout = async ({ children }: ChildrenType) => {
+const Layout = ({ children }: ChildrenType) => {
   // Vars
   const direction = 'ltr'
   const mode = getMode()
@@ -46,9 +47,9 @@ const Layout = async ({ children }: ChildrenType) => {
           </HorizontalLayout>
         }
       />
-      <ScrollToTop className='mui-fixed'>
-        <Button variant='contained' className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'>
-          <i className='ri-arrow-up-line' />
+      <ScrollToTop className="mui-fixed">
+        <Button variant="contained" className="is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center">
+          <i className="ri-arrow-up-line" />
         </Button>
       </ScrollToTop>
     </Providers>
