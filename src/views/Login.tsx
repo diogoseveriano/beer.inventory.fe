@@ -61,11 +61,12 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
-  const [email, setEmail] = useState('test@test.pt');
-  const [password, setPassword] = useState('test');
-
   const login = async (e) => {
     e.preventDefault();
+
+    const email = e.target[0].value;
+    const password = e.target[2].value;
+
     const result = await signIn('credentials', {
       redirect: false,
       email,
