@@ -5,12 +5,15 @@ import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/home/LogisticsStat
 import InventoryTable from "@/app/(dashboard)/home/InventoryTable";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import {FormControl, InputLabel, Select} from "@mui/material";
+import MenuItem from "@mui/material/MenuItem";
 
 const Page = () => {
   const { data: session, status } = useSession(); // Get session and status
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [warehouse, setWarehouse] = useState("Default")
 
   useEffect(() => {
     // Ensure session is loaded and available
@@ -47,16 +50,24 @@ const Page = () => {
     return <div>Loading...</div>; // Show loading message or spinner
   }
 
-  // Error state
-  if (error) {
-    // @ts-ignore
-    return <div>Error: {error.message}</div>; // Handle error if there's any
-  }
-
   return (
     <div>
       <h1>Inventory Dashboard</h1>
       <p>Management Board</p>
+      <FormControl variant="standard" sx={{ m: 2, minWidth: 250 }}>
+        <InputLabel id="demo-simple-select-standard-label">Selected Warehouse</InputLabel>
+        <Select
+          labelId="demo-simple-select-standard-label"
+          id="demo-simple-select-standard"
+          value={warehouse}
+          label="Warehouse"
+        >
+          <MenuItem value="Default">
+            <em>Default</em>
+          </MenuItem>
+        </Select>
+      </FormControl>
+      <br />
       <br />
 
       {/* Pass fetched data to child components */}
