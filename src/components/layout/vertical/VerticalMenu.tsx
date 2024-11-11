@@ -68,19 +68,22 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-fill' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <MenuItem href='/home' icon={<i className='ri-home-smile-line' />}>
+        <MenuItem href='/home' icon={<i className='ri-stock-line' />}>
           Inventory
         </MenuItem>
-        <MenuItem href='/items' icon={<i className='ri-home-smile-line' />}>
+        <MenuItem href='/items' icon={<i className='ri-list-check' />}>
           Items
         </MenuItem>
-        <MenuItem href='/purchase-orders' icon={<i className='ri-home-smile-line' />}>
+        <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
           Purchase Orders
         </MenuItem>
-        <MenuItem href='/warehouses' icon={<i className='ri-home-smile-line' />}>
+        <MenuItem href='/warehouses' icon={<i className='ri-database-line' />}>
           Warehouses
         </MenuItem>
-        <MenuItem href='/configurations' icon={<i className='ri-information-line' />}>
+        <MenuItem href='/customs' icon={<i className='ri-file-paper-line' />}>
+          e-DIC / e-DUC
+        </MenuItem>
+        <MenuItem href='/configurations' icon={<i className='ri-tools-line' />}>
           Configurations
         </MenuItem>
       </Menu>
