@@ -20,7 +20,7 @@ const columns: GridColDef[] = [
   { field: 'unit', headerName: 'Unit', width: 100 },
 ];
 
-const paginationModel = { page: 0, pageSize: 5 };
+const paginationModel = { page: 0, pageSize: 10 };
 
 function formatResult(result : any) {
   const r = [];
@@ -41,15 +41,16 @@ function formatResult(result : any) {
   return r;
 }
 
-const InventoryTable = () => {
+const StockTable = () => {
 
   const { data: session } = useSession();
-  const [rows, setRows] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [stock, setStock] = useState([]);
 
   useEffect(() => {
     try {
-      const fetchData = async () => {
-        const response = await axios.get("http://localhost:8080/api/inventory/1", {
+      const fetchStockData = async () => {
+        const response = await axios.get("http://localhost:8080/api/stock/1", {
           headers: {
             //@ts-ignore
             Authorization: `Bearer ${session.accessToken}`, // Use template literals
@@ -57,10 +58,10 @@ const InventoryTable = () => {
         });
 
         // @ts-ignore
-        setRows(formatResult(response.data));
+        setStock(formatResult(response.data));
       }
 
-      fetchData();
+      fetchStockData();
 
     } catch (e) {
 
@@ -68,17 +69,22 @@ const InventoryTable = () => {
   }, [session]);
 
   return (
-    <Paper sx={{ width: '100%' }}>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[10, 15, 20]}
-        checkboxSelection
-        sx={{ border: 0 }}
-      />
-    </Paper>
+    <>
+      <h2>Stock (Finished Products) - Beer Stock</h2>
+      <br/>
+      <Paper sx={{width: '100%'}}>
+        <DataGrid
+          rows={stock}
+          disableMultipleRowSelection={true}
+          disableRowSelectionOnClick={true}
+          columns={columns}
+          initialState={{pagination: {paginationModel}}}
+          pageSizeOptions={[10, 15, 20]}
+          sx={{border: 0}}
+        />
+      </Paper>
+    </>
   );
 }
 
-export default InventoryTable
+export default StockTable

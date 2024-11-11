@@ -53,7 +53,7 @@ export type Config = {
 const themeConfig: Config = {
   templateShortName: 'BIS',
   templateName: 'Beer Inventory System',
-  homePageUrl: '/home',
+  homePageUrl: '/inventory',
   settingsCookieName: 'materialize-mui-next-demo-1',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'

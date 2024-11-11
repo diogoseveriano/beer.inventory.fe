@@ -64,7 +64,7 @@ const sources: BundleScriptConfig = {
     // Custom file with only few icons
     /* {
       filename: require.resolve('@iconify/json/json/line-md.json'),
-      icons: ['home-twotone-alt', 'github', 'document-list', 'document-code', 'image-twotone']
+      icons: ['inventory-twotone-alt', 'github', 'document-list', 'document-code', 'image-twotone']
     } */
 
     // Custom JSON file

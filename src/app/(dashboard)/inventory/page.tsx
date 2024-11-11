@@ -6,8 +6,8 @@ import axios from "axios";
 
 import { useSession } from "next-auth/react";
 
-import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/home/LogisticsStatisticsCardEvolved";
-import InventoryTable from "@/app/(dashboard)/home/InventoryTable";
+import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/inventory/LogisticsStatisticsCardEvolved";
+import InventoryTable from "@/app/(dashboard)/inventory/InventoryTable";
 
 const Page = () => {
   const { data: session, status } = useSession(); // Get session and status
@@ -21,7 +21,7 @@ const Page = () => {
       const fetchData = async () => {
         try {
           // Fetch data from API with Authorization header
-          const response = await axios.get("http://localhost:8080/api/aggregator", {
+          const response = await axios.get("http://localhost:8080/api/aggregator/inventory", {
             xsrfCookieName: "next-auth.csrf-token",
             headers: {
               //@ts-ignore
