@@ -7,7 +7,16 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 
 import Button from "@mui/material/Button";
-import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
+import {
+  Alert,
+  Backdrop,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from "@mui/material";
 import Grid from "@mui/material/Grid";
 
 import TextField from "@mui/material/TextField";
@@ -22,7 +31,8 @@ import WarehouseDropdown from "@/app/(dashboard)/inventory/WarehouseDropdown";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DemoContainer} from "@mui/x-date-pickers/internals/demo";
-
+import Toast from "@/app/(dashboard)/inventory/Toast";
+import IconButton from "@mui/material/IconButton";
 
 const Page = () => {
   const { data: session, status } = useSession(); // Get session and status
@@ -50,6 +60,11 @@ const Page = () => {
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState(null);
 
+  const [backdrop, setBackdrop] = useState(true);
+  const [backdropSave, setBackdropSave] = useState(false)
+  const [backendErrors, setBackendErrors] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
   const onItemSelect = (e : any) => {
     const selection = e.target.value;
 
@@ -74,14 +89,20 @@ const Page = () => {
     setWarehouse(e.target.value);
   }
 
-  const handleClose = (value: string) => {
-    setOpen(false)
+  const handleClose = (value : any) => {
+    handleDialogClose()
   }
 
   const handleDialogClose = () => {
+    setOpen(false)
     setItemDescription("")
     setItemBrand("")
-    setOpen(false)
+    setBackendErrors("")
+    setQuantity(0)
+    setSaveSuccess(false)
+    setDate(null)
+    setSelectedUnit("")
+    setSelectedItem("")
   }
 
   const handleTextFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,6 +127,9 @@ const Page = () => {
   };
 
   const handleSave = () => {
+    setSaveSuccess(false);
+    setBackendErrors("")
+
     const data = {
       itemId: selectedItem,
       supplier: {
@@ -124,17 +148,27 @@ const Page = () => {
       entryDate: date
     }
 
-    console.log(data);
+    if (data.quantity == 0) {
+      setBackendErrors("Quantitity cannot be 0!")
+    } else if (data.entryDate == "" || data.entryDate == undefined) {
+      setBackendErrors("Please select an entry date!")
+    } else {
+      setBackdropSave(true)
 
-    axios.post("http://localhost:8080/api/inventory/create", data, {
-      xsrfCookieName: "next-auth.csrf-token",
-      headers: {
-        //@ts-ignore
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    }).then(result => {
-      console.log(result)
-    });
+      axios.post("http://localhost:8080/api/inventory/create", data, {
+        xsrfCookieName: "next-auth.csrf-token",
+        headers: {
+          //@ts-ignore
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      }).then(result => {
+        setBackendErrors("")
+        //handleDialogClose();
+        setSaveSuccess(true);
+      }).catch(err => {
+        setBackendErrors(err.response.data.details)
+      }).finally(() => setBackdropSave(false));
+    }
   }
 
   useEffect(() => {
@@ -153,10 +187,12 @@ const Page = () => {
 
           setStatistics(response.data);
           setLoading(false);
+          setBackdrop(false)
         } catch (err) {
           // @ts-ignore
           setError(err);
           setLoading(false);
+          setBackdrop(false)
         }
       };
 
@@ -203,11 +239,12 @@ const Page = () => {
         });
       });
     } else if (status === "unauthenticated") {
+      setBackdrop(false)
       setLoading(false); // Set loading to false if user is not authenticated
       // @ts-ignore
       setError(new Error("User is not authenticated"));
     }
-  }, [session, status, statistics]); // Run effect only when session or status changes
+  }, [session, status]); // Run effect only when session or status changes
 
   // Loading state
   if (loading) {
@@ -216,6 +253,19 @@ const Page = () => {
 
   return (
     <div>
+      <Toast open={saveSuccess} />
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+        open={backdrop}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: 9999 })}
+        open={backdropSave}
+      >
+        <CircularProgress color="inherit" />&nbsp; Saving...
+      </Backdrop>
       <h1>Inventory Dashboard</h1>
       <p>Management Board</p>
       <br />
@@ -228,7 +278,15 @@ const Page = () => {
       <InventoryTable />
 
       <Dialog maxWidth={"md"} fullWidth={true} onClose={handleDialogClose} open={open}>
-        <DialogTitle>New Entry/Exit on Inventory (Manual)</DialogTitle>
+        <DialogTitle>
+          New Entry/Exit on Inventory (Manual)
+          <IconButton
+            aria-label='close'
+            onClick={handleClose}
+            className='absolute top-2.5 right-2.5 text-[var(--mui-palette-grey-500)]'>
+            <i className='ri-close-line' />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <DialogContentText className='mbe-3'>
             To add a new manual entry/exit on inventory, fill out below.
@@ -279,7 +337,8 @@ const Page = () => {
           <br/>
           <Grid container spacing={6}>
             <Grid item xs={12} md={8}>
-
+              { backendErrors ?
+                <Alert severity='error'>{backendErrors}</Alert> : <></> }
             </Grid>
             <Grid item xs={12} md={4}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -297,7 +356,7 @@ const Page = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} variant='outlined' color='error'>
-            Cancel
+            Discard
           </Button>
           <Button onClick={handleSave} variant='contained' color='success'>
             Save
