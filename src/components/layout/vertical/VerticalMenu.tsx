@@ -8,7 +8,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
 
 // Component Imports
-import { Menu, MenuItem } from '@menu/vertical-menu'
+import {Menu, MenuItem, MenuSection} from '@menu/vertical-menu'
 
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
@@ -19,6 +19,8 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 // Style Imports
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
+import Divider from "@mui/material/Divider";
+import {useSession} from "next-auth/react";
 
 type RenderExpandIconProps = {
   open?: boolean
@@ -39,11 +41,14 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
   // Hooks
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
+  const { data: session } = useSession()
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
+
+
 
   return (
     // eslint-disable-next-line lines-around-comment
@@ -68,27 +73,59 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-fill' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
+        <MenuSection label={"Management"} icon={<i className='ri-stock-line' />} />
+        <MenuItem href='/items' icon={<i className='ri-list-check' />}>
+          Items
+        </MenuItem>
         <MenuItem href='/inventory' icon={<i className='ri-stock-line' />}>
           Inventory
         </MenuItem>
-        <MenuItem href='/stock' icon={<i className='ri-stock-line' />}>
+        <MenuItem href='/stock' icon={<i className='ri-beer-fill' />}>
           Stock
-        </MenuItem>
-        <MenuItem href='/items' icon={<i className='ri-list-check' />}>
-          Items
         </MenuItem>
         <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
           Purchase Orders
         </MenuItem>
+        <MenuItem href='/productions' icon={<i className='ri-shopping-cart-line' />}>
+          Productions
+        </MenuItem>
         <MenuItem href='/warehouses' icon={<i className='ri-database-line' />}>
           Warehouses
         </MenuItem>
-        <MenuItem href='/customs' icon={<i className='ri-file-paper-line' />}>
+        <MenuItem href='/suppliers' icon={<i className='ri-box-1-fill' />}>
+          Suppliers
+        </MenuItem>
+        <MenuItem href='/alerts' icon={<i className='ri-tools-line' />}>
+          Alerts
+        </MenuItem>
+        <MenuSection label={"Configurations"} icon={<i className='ri-tools-line' />} />
+        <MenuItem href='/company' icon={<i className='ri-tools-line' />}>
+          Company Settings
+        </MenuItem>
+        { session?.user && session.user.role == 'ADMIN' ?
+        <MenuItem href='/users' icon={<i className='ri-user-fill' />}>
+          Users
+        </MenuItem> : <></> }
+        {
+          /*
+          <MenuItem href='/customs' icon={<i className='ri-file-paper-line' />}>
           e-DIC / e-DUC
         </MenuItem>
-        <MenuItem href='/configurations' icon={<i className='ri-tools-line' />}>
-          Configurations
+          <MenuSection label={"Clients"} icon={<i className='ri-user-fill' />} />
+        <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
+          Clients
         </MenuItem>
+        <MenuItem href='/invoices' icon={<i className='ri-file-paper-line' />}>
+          Invoices
+        </MenuItem>
+        <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
+          Orders
+        </MenuItem>
+        <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
+          Shipping
+        </MenuItem>
+           */
+        }
       </Menu>
       {/* <Menu
         popoutMenuOffset={{ mainAxis: 17 }}

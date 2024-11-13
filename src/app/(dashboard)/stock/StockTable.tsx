@@ -16,11 +16,20 @@ const columns: GridColDef[] = [
   { field: 'itemCategory', headerName: 'Category', width: 200 },
   { field: 'itemPrice', headerName: 'Cost Price (per Unit)', width: 200 },
   { field: 'quantity', headerName: 'Quantity', width: 140 },
-  { field: 'minQuantity', headerName: 'Minimum Quantity', width: 140 },
   { field: 'unit', headerName: 'Unit', width: 100 },
+  { field: 'batch', headerName: 'Batch', width: 120 },
+  { field: 'signal', headerName: 'Entry Type', width: 180 },
 ];
 
 const paginationModel = { page: 0, pageSize: 10 };
+
+function getSignal(quantity : number) {
+  if (quantity > 0) {
+    return "Entry";
+  } else {
+    return "Exit";
+  }
+}
 
 function formatResult(result : any) {
   const r = [];
@@ -33,8 +42,9 @@ function formatResult(result : any) {
       itemCategory: result[i].item.category.name,
       itemPrice: "€ " + result[i].costPrice,
       quantity: result[i].quantity,
-      minQuantity: result[i].minQuantity,
-      unit: result[i].unit.name
+      unit: result[i].unit.name,
+      batch: result[i].batch,
+      signal: getSignal(result[i].quantity)
     });
   }
 

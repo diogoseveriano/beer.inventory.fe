@@ -23,13 +23,14 @@ const handler = NextAuth({
             password: credentials.password,
           });
 
-          const { token, email, username } = response.data; // Assuming response contains these fields
+          const { token, email, username, role } = response.data;
 
           if (token) {
             return {
               token,
               email,
-              username, // Pass the username and email along with the token
+              username,
+              role
             };
           }
 
@@ -44,22 +45,22 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // Add user details and token to the JWT
         token.accessToken = user.token;
         token.email = user.email;
-        token.name = user.username; // Add username to the token
+        token.name = user.username;
+        token.role = user.role;
       }
 
       return token;
     },
 
     async session({ session, token }) {
-      // Attach user details to the session
-      session.accessToken = token.accessToken; // Add the accessToken to the session
+      session.accessToken = token.accessToken;
       session.user = {
         ...session.user,
-        email: token.email, // Add email to session user
-        name: token.name, // Add username to session user
+        email: token.email,
+        name: token.name,
+        role: token.role
       };
 
       const decoded = jwt.decode(token.accessToken);
