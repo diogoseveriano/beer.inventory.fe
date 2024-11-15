@@ -3,7 +3,7 @@ import React from 'react';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 // @ts-ignore
-const UnitDropdown = ({ units, onItemSelect, defaultUnit }) => {
+const UnitDropdown = ({ units, onItemSelect }) => {
   return (
     <FormControl fullWidth={true}>
       <InputLabel id="unit-label">Unit *</InputLabel>
@@ -13,7 +13,7 @@ const UnitDropdown = ({ units, onItemSelect, defaultUnit }) => {
         fullWidth={true}
         size={"medium"}
         label="Unit"
-        value={defaultUnit}  // or use `value={selectedValue}` for a controlled component
+        defaultValue=""  // or use `value={selectedValue}` for a controlled component
         id="unit"
         labelId="unit-label"
         variant={"outlined"}>

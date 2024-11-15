@@ -42,7 +42,7 @@ function formatResult(result : any) {
       itemCategory: result[i].item.category.name,
       itemPrice: "€ " + result[i].costPrice,
       quantity: result[i].quantity,
-      unit: result[i].unit.name,
+      unit: result[i].item.unit.name,
       batch: result[i].batch,
       signal: getSignal(result[i].quantity)
     });

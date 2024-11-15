@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 
 import axios from "axios";
 
@@ -15,7 +15,7 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle, FormControl, InputLabel, OutlinedInput
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 
@@ -33,6 +33,7 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DemoContainer} from "@mui/x-date-pickers/internals/demo";
 import Toast from "@/app/(dashboard)/inventory/Toast";
 import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 
 const Page = () => {
   const { data: session, status } = useSession(); // Get session and status
@@ -309,7 +310,15 @@ const Page = () => {
                          label='Quantity'/>
             </Grid>
             <Grid item xs={12} md={2}>
-              <TextField fullWidth onChange={handleTextFieldChange} id='costPrice' type={"number"} label='Cost Price'/>
+              <FormControl>
+                <InputLabel htmlFor='icons-adornment-cost-price'>Cost Price</InputLabel>
+                <OutlinedInput
+                  onChange={handleTextFieldChange}
+                  label='Cost Price'
+                  id='icons-adornment-cost-price'
+                  endAdornment={<InputAdornment position='end'>€</InputAdornment>}
+                />
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={2}>
               <UnitDropdown units={units} onItemSelect={onUnitSelect}/>
