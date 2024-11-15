@@ -3,17 +3,18 @@ import React from 'react';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 // @ts-ignore
-const WarehouseDropdown = ({ warehouses, onItemSelect }) => {
+const WarehouseDropdown = ({ disabled, warehouses, onItemSelect, defaultWarehouse }) => {
   return (
     <FormControl fullWidth={true}>
       <InputLabel id="warehouse-label">Warehouse *</InputLabel>
       <Select
         required
+        disabled={disabled}
         onChange={onItemSelect}
         fullWidth={true}
         size={"medium"}
         label="Warehouse"
-        defaultValue=""  // or use `value={selectedValue}` for a controlled component
+        value={defaultWarehouse}  // or use `value={selectedValue}` for a controlled component
         id="warehouse"
         labelId="warehouse-label"
         variant={"outlined"}>

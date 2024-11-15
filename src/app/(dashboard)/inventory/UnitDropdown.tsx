@@ -3,12 +3,13 @@ import React from 'react';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 // @ts-ignore
-const UnitDropdown = ({ units, onItemSelect, defaultUnit }) => {
+const UnitDropdown = ({ disabled, units, onItemSelect, defaultUnit }) => {
   return (
     <FormControl fullWidth={true}>
       <InputLabel id="unit-label">Unit *</InputLabel>
       <Select
         required
+        disabled={disabled}
         onChange={onItemSelect}
         fullWidth={true}
         size={"medium"}

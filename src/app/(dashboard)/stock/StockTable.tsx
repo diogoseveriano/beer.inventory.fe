@@ -8,6 +8,8 @@ import Paper from '@mui/material/Paper';
 import axios from "axios";
 
 import { useSession } from "next-auth/react";
+import {Dialog, DialogContent, DialogTitle, LinearProgress} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 100 },
@@ -78,6 +80,20 @@ const StockTable = () => {
     }
   }, [session]);
 
+  const doubleClick = (e : any) => {
+    setOpen(true)
+    setLoading(true)
+  }
+
+  // DIALOG
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const handleClose = (e : any) => {
+    setOpen(false)
+    setLoading(false);
+  }
+
   return (
     <>
       <h2>Stock (Finished Products) - Beer Stock</h2>
@@ -91,8 +107,24 @@ const StockTable = () => {
           initialState={{pagination: {paginationModel}}}
           pageSizeOptions={[10, 15, 20]}
           sx={{border: 0}}
+          onCellDoubleClick={doubleClick}
         />
       </Paper>
+
+      <Dialog maxWidth={"md"} fullWidth={true} onClose={handleClose} open={open}>
+        <DialogTitle>
+          Stock Entry Details
+          <IconButton
+            aria-label='close'
+            onClick={handleClose}
+            className='absolute top-2.5 right-2.5 text-[var(--mui-palette-grey-500)]'>
+            <i className='ri-close-line' />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          { loading ? <LinearProgress color={"secondary"} /> : null }
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
