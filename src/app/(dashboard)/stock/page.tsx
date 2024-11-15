@@ -15,7 +15,7 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle, FormControl, FormHelperText, InputLabel, OutlinedInput
+  DialogTitle, FormControl, FormHelperText, InputLabel, MenuItem, OutlinedInput, Select
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 
@@ -25,16 +25,15 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ItemDropdown from "@/app/(dashboard)/inventory/ItemDropdown";
 import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/inventory/LogisticsStatisticsCardEvolved";
 import UnitDropdown from "@/app/(dashboard)/inventory/UnitDropdown";
-import SupplierDropdown from "@/app/(dashboard)/inventory/SupplierDropdown";
-import WarehouseDropdown from "@/app/(dashboard)/inventory/WarehouseDropdown";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DemoContainer} from "@mui/x-date-pickers/internals/demo";
-import Toast from "@/app/(dashboard)/inventory/Toast";
+import Toast from "@/app/(dashboard)/stock/Toast";
 import IconButton from "@mui/material/IconButton";
 import StockTable from "@/app/(dashboard)/stock/StockTable";
-import Typography from "@mui/material/Typography";
 import InputAdornment from "@mui/material/InputAdornment";
+import Divider from "@mui/material/Divider";
+import WarehouseDropdown from "@/app/(dashboard)/stock/WarehouseDropdown";
 
 const Page = () => {
   const { data: session, status } = useSession(); // Get session and status
@@ -46,15 +45,11 @@ const Page = () => {
 
   const [units, setUnits] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
-
-  const [itemBrand, setItemBrand] = useState("");
-  const [itemDescription, setItemDescription] = useState("")
 
   const [selectedUnit, setSelectedUnit] = useState("");
   const [selectedItem, setSelectedItem] = useState("");
-  const [selectedSupplier, setSupplier] = useState("-1");
+  const [selectedSupplier] = useState("-1");
   const [selectedWarehouse, setWarehouse] = useState("");
   const [quantity, setQuantity] = useState(0);
   const [costPrice, setCostPrice] = useState(0);
@@ -75,13 +70,19 @@ const Page = () => {
   const [salePriceNew, setSalePriceNew] = useState(0.0);
   const [retailPriceNew, setRetailPriceNew] = useState(0.0);
 
+  const [typeOfEntry, setTypeOfEntry] = useState("Entry");
+
+  const [updateOnSave, setUpdateOnSave] = useState(false);
+
+  const onTypeOfEntry = (e : any) => {
+    setTypeOfEntry(e.target.value);
+  }
+
   const onItemSelect = (e : any) => {
     const selection = e.target.value;
 
     availableItems.map((item) => {
       if (item.id == selection) {
-        setItemBrand(item.brand)
-        setItemDescription(item.description)
         setSelectedItem(item.id)
         setSalePrice(item.salePrice)
         setRetailPrice(item.retailPrice)
@@ -90,6 +91,7 @@ const Page = () => {
         setSalePriceNew(item.salePrice)
         setRetailPriceNew(item.retailPrice)
         setSelectedUnit(item.unit.id)
+        warehouses.length == 1 ? setWarehouse(warehouses[0].id) : null
       }
     });
   }
@@ -113,14 +115,13 @@ const Page = () => {
 
   const handleDialogClose = () => {
     setOpen(false)
-    setItemDescription("")
-    setItemBrand("")
     setBackendErrors("")
     setQuantity(0)
     setSaveSuccess(false)
     setDate(null)
     setSelectedUnit("")
     setSelectedItem("")
+    setWarehouse("")
     setRetailPrice(0)
     setSalePrice(0)
     setRetailPriceNew(0)
@@ -169,7 +170,7 @@ const Page = () => {
         id: selectedWarehouse
       },
       inventoryType: 0, //TODO TEMP
-      quantity: quantity,
+      quantity: typeOfEntry == "Entry" ? quantity : (quantity * -1),
       costPrice: costPriceNew != costPrice ? costPriceNew : costPrice,
       batch: batch,
       notes: notes,
@@ -194,8 +195,8 @@ const Page = () => {
         },
       }).then(result => {
         setBackendErrors("")
-        //handleDialogClose();
         setSaveSuccess(true);
+        setUpdateOnSave(true)
       }).catch(err => {
         setBackendErrors(err.response.data.details)
       }).finally(() => setBackdropSave(false));
@@ -203,11 +204,12 @@ const Page = () => {
   }
 
   useEffect(() => {
+    setUpdateOnSave(false)
+
     //@ts-ignore
     if (status === "authenticated" && session?.accessToken) {
       const fetchData = async () => {
         try {
-          // Fetch data from API with Authorization header
           const response = await axios.get("http://localhost:8080/api/aggregator/stock", {
             xsrfCookieName: "next-auth.csrf-token",
             headers: {
@@ -248,16 +250,6 @@ const Page = () => {
           // @ts-ignore
           setUnits(result.data);
         });
-        axios.get("http://localhost:8080/api/suppliers", {
-          xsrfCookieName: "next-auth.csrf-token",
-          headers: {
-            //@ts-ignore
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-        }).then(result => {
-          // @ts-ignore
-          setSuppliers(result.data);
-        });
         axios.get("http://localhost:8080/api/warehouses", {
           xsrfCookieName: "next-auth.csrf-token",
           headers: {
@@ -275,13 +267,15 @@ const Page = () => {
       // @ts-ignore
       setError(new Error("User is not authenticated"));
     }
-  }, [session, status]); // Run effect only when session or status changes
+  }, [session, status, updateOnSave]); // Run effect only when session or status changes
 
   // Loading state
   if (loading) {
     return <div>Loading...</div>; // Show loading message or spinner
   }
 
+  // @ts-ignore
+  // @ts-ignore
   return (
     <div>
       <Toast open={saveSuccess} />
@@ -292,7 +286,7 @@ const Page = () => {
         <CircularProgress color="inherit" />
       </Backdrop>
       <Backdrop
-        sx={(theme) => ({ color: '#fff', zIndex: 9999 })}
+        sx={() => ({ color: '#fff', zIndex: 9999 })}
         open={backdropSave}
       >
         <CircularProgress color="inherit" />&nbsp; Saving...
@@ -310,7 +304,7 @@ const Page = () => {
 
       <Dialog maxWidth={"md"} fullWidth={true} onClose={handleDialogClose} open={open}>
         <DialogTitle>
-          New Entry/Exit on Stock (Manual)
+          Manual Stock Entry
           <IconButton
             aria-label='close'
             onClick={handleClose}
@@ -320,49 +314,56 @@ const Page = () => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText className='mbe-3'>
-            To add a new manual entry/exit on stock, fill out below.
+            Manage your stock by adding entries / exits.
           </DialogContentText>
           <br/>
           <Grid container spacing={6}>
             <Grid item xs={12} md={6}>
+              <FormControl fullWidth={true}>
+                <InputLabel id="entry-label">Type of Entry</InputLabel>
+                <Select
+                  required
+                  onChange={onTypeOfEntry}
+                  fullWidth={true}
+                  size={"medium"}
+                  label="Entry Type"
+                  defaultValue="Entry"
+                  id="entry"
+                  labelId="entry-label"
+                  variant={"outlined"}>
+                  <MenuItem selected key={1} value={"Entry"}>
+                    Entry
+                  </MenuItem>
+                  <MenuItem key={2} value={"Exit"}>
+                    Exit
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
               <ItemDropdown availableItems={availableItems} onItemSelect={onItemSelect}/>
             </Grid>
-            <Grid hidden={itemBrand == ""} item xs={12} md={6}>
-              <h4>Item Details</h4>
-              <p><strong>Brand:</strong> {itemBrand}</p>
-              <p><strong>Description:</strong> {itemDescription}</p>
-            </Grid>
           </Grid>
-          <br/>
+          <br />
           <Grid container spacing={6}>
-            <Grid item xs={12} md={2}>
-              <TextField required onChange={handleTextFieldChange} fullWidth id='quantity' type={"number"}
-                         label='Quantity'/>
-            </Grid>
-            <Grid item xs={12} md={2}>
+           <Grid item xs={12}>
+             <Divider className='m-0 font-bold'>Pricing Details</Divider>
+           </Grid>
+            <Grid item xs={12} md={3}>
               <FormControl>
                 <InputLabel htmlFor='costPrice'>Cost Price</InputLabel>
                 <OutlinedInput
                   onChange={handleTextFieldChange}
                   label='Cost Price'
                   id='costPrice'
+                  disabled={selectedItem == ""}
                   endAdornment={<InputAdornment position='end'>€</InputAdornment>}
                 />
                 { costPrice && costPrice != 0 ?
-                  <FormHelperText>C. P.: {costPrice} €</FormHelperText>
+                  <FormHelperText>Current Price: {costPrice} €</FormHelperText>
                   : <></> }
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={2}>
-              <UnitDropdown units={units} onItemSelect={onUnitSelect} defaultUnit={selectedUnit} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth onChange={handleTextFieldChange} id='batch' autoCapitalize={"on"} type={"text"}
-                         label='Batch'/>
-            </Grid>
-          </Grid>
-          <br />
-          <Grid container spacing={6}>
             <Grid item xs={12} md={3}>
               <FormControl>
                 <InputLabel htmlFor='retailPrice'>Retail Price</InputLabel>
@@ -370,6 +371,7 @@ const Page = () => {
                   onChange={handleTextFieldChange}
                   label='Retail Price'
                   id='retailPrice'
+                  disabled={selectedItem == ""}
                   endAdornment={<InputAdornment position='end'>€</InputAdornment>}
                   placeholder={retailPrice == null ? "0.00" : retailPrice.toString()}
                 />
@@ -382,6 +384,7 @@ const Page = () => {
               <FormControl>
                 <InputLabel htmlFor='salePrice'>PVP</InputLabel>
                 <OutlinedInput
+                  disabled={selectedItem == ""}
                   onChange={handleTextFieldChange}
                   label='PVP'
                   id='salePrice'
@@ -393,26 +396,38 @@ const Page = () => {
                   : <></> }
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Alert variant={"outlined"} severity={"info"}>
-                These prices are updated on the item level.
-              </Alert>
+            <Grid item xs={12} md={3}>
+              <UnitDropdown disabled={true} units={units} onItemSelect={onUnitSelect} defaultUnit={selectedUnit} />
             </Grid>
           </Grid>
-          <br/>
+          <br />
           <Grid container spacing={6}>
-            <Grid item xs={12} md={6}>
-              <WarehouseDropdown warehouses={warehouses} onItemSelect={onWarehouseSelect}/>
+            <Grid item xs={12}>
+              <Divider className='m-0 font-bold'>Details</Divider>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <TextField disabled={selectedItem == ""} required onChange={handleTextFieldChange} fullWidth id='quantity' type={"number"}
+                         label='Quantity'/>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField disabled={selectedItem == ""} fullWidth onChange={handleTextFieldChange} id='batch' autoCapitalize={"on"} type={"text"}
+                         label='Batch'/>
             </Grid>
             <Grid item xs={12} md={6}>
-              { !customsRegistered ?
-              <Alert severity={"warning"}>This is not a customs registered warehouse.</Alert> : <></> }
+              <WarehouseDropdown disabled={selectedItem == ""} warehouses={warehouses} onItemSelect={onWarehouseSelect} defaultWarehouse={selectedWarehouse}/>
+            </Grid>
+          </Grid>
+          <Grid container spacing={6}>
+            <Grid item xs={6}></Grid>
+            <Grid item xs={12} md={6}>
+              { !customsRegistered ? <><br />
+              <Alert severity={"warning"}>This is not a customs registered warehouse.</Alert></> : <></> }
             </Grid>
           </Grid>
           <br/>
           <Grid container spacing={6}>
             <Grid item xs={12}>
-              <TextField fullWidth multiline rows={2} onChange={handleTextFieldChange} id='notes' label={"Notes"}/>
+              <TextField disabled={selectedItem == ""} fullWidth multiline rows={2} onChange={handleTextFieldChange} id='notes' label={"Notes"}/>
             </Grid>
           </Grid>
           <br/>
@@ -426,8 +441,8 @@ const Page = () => {
                 <DemoContainer components={['DatePicker']}>
                   <DatePicker
                     label="Entry Date *"
-                    value={date}
                     format={"DD-MM-YYYY"}
+                    // @ts-ignore
                     onChange={(value) => setDate(value)}
                   />
                 </DemoContainer>
@@ -439,7 +454,7 @@ const Page = () => {
           <Button onClick={handleClose} variant='outlined' color='error'>
             Discard
           </Button>
-          <Button onClick={handleSave} variant='contained' color='success'>
+          <Button disabled={selectedItem == ""} onClick={handleSave} variant='contained' color='success'>
             Save
           </Button>
         </DialogActions>
