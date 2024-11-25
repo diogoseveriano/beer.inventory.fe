@@ -22,9 +22,9 @@ import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import ItemDropdown from "@/app/(dashboard)/inventory/ItemDropdown";
-import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/inventory/LogisticsStatisticsCardEvolved";
-import UnitDropdown from "@/app/(dashboard)/inventory/UnitDropdown";
+import ItemDropdown from "@/app/(dashboard)/inventory_BK/ItemDropdown";
+import LogisticsStatisticsCardEvolved from "@/app/(dashboard)/inventory_BK/LogisticsStatisticsCardEvolved";
+import UnitDropdown from "@/app/(dashboard)/inventory_BK/UnitDropdown";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DemoContainer} from "@mui/x-date-pickers/internals/demo";
@@ -34,6 +34,7 @@ import StockTable from "@/app/(dashboard)/stock/StockTable";
 import InputAdornment from "@mui/material/InputAdornment";
 import Divider from "@mui/material/Divider";
 import WarehouseDropdown from "@/app/(dashboard)/stock/WarehouseDropdown";
+import ItemVariantDropdown from "./ItemVariantDropdown";
 
 const Page = () => {
   const { data: session, status } = useSession(); // Get session and status
@@ -56,6 +57,8 @@ const Page = () => {
   const [batch, setBatch] = useState("");
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState(null);
+  const [expiryDate, setExpiryDate] = useState(null);
+  const [orderId, setOrderId] = useState("");
 
   const [backdrop, setBackdrop] = useState(true);
   const [backdropSave, setBackdropSave] = useState(false)
@@ -74,8 +77,19 @@ const Page = () => {
 
   const [updateOnSave, setUpdateOnSave] = useState(false);
 
+  const [variantDisabled, setVariantDisabled] = useState(true);
+  const [availableVariants, setAvailableVariants] = useState([]);
+  const [selectedVariant, setSelectedVariant] = useState("");
+
+  const [disabledByExitEntry, setDisabledByExitEntry] = useState(false);
+
   const onTypeOfEntry = (e : any) => {
     setTypeOfEntry(e.target.value);
+    if (typeOfEntry == "Exit") {
+      setDisabledByExitEntry(false)
+    } else {
+      setDisabledByExitEntry(true)
+    }
   }
 
   const onItemSelect = (e : any) => {
@@ -84,6 +98,21 @@ const Page = () => {
     availableItems.map((item) => {
       if (item.id == selection) {
         setSelectedItem(item.id)
+        if (item.variants.length > 0) {
+          setAvailableVariants(item.variants);
+          setVariantDisabled(false);
+        } else {
+          setAvailableVariants([])
+        }
+        warehouses.length == 1 ? setWarehouse(warehouses[0].id) : null
+      }
+    });
+  }
+
+  const onVariantSelect = (e : any) => {
+    setSelectedVariant(e.target.value);
+    availableVariants.map((item) => {
+      if (item.id == e.target.value) {
         setSalePrice(item.salePrice)
         setRetailPrice(item.retailPrice)
         setCostPrice(item.indicativeCostPrice)
@@ -91,9 +120,8 @@ const Page = () => {
         setSalePriceNew(item.salePrice)
         setRetailPriceNew(item.retailPrice)
         setSelectedUnit(item.unit.id)
-        warehouses.length == 1 ? setWarehouse(warehouses[0].id) : null
       }
-    });
+    })
   }
 
   const onUnitSelect = (e : any) => {
@@ -128,6 +156,12 @@ const Page = () => {
     setSalePriceNew(0)
     setCostPriceNew(0)
     setCostPrice(0)
+    setSelectedVariant("")
+  }
+
+  const onDefaultWarehouseChange = (e : any) => {
+    setDefaultWarehouse(e.target.value);
+
   }
 
   const handleTextFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,6 +186,8 @@ const Page = () => {
       case 'salePrice':
         setSalePriceNew(value);
         break;
+      case 'orderId':
+        setOrderId(value);
       default:
         break;
     }
@@ -163,6 +199,7 @@ const Page = () => {
 
     const data = {
       itemId: selectedItem,
+      itemVariantId: selectedVariant,
       supplier: {
         id: selectedSupplier
       },
@@ -177,8 +214,12 @@ const Page = () => {
       unitId: selectedUnit,
       salePrice: salePriceNew != salePrice ? salePriceNew : salePrice,
       retailPrice: retailPriceNew != retailPrice ? retailPriceNew : retailPrice,
-      entryDate: date
+      entryDate: date,
+      expirationDate: expiryDate,
+      orderId: orderId
     }
+
+    console.log(data)
 
     if (data.quantity == 0) {
       setBackendErrors("Quantitity cannot be 0!")
@@ -203,6 +244,8 @@ const Page = () => {
     }
   }
 
+  const [defaultWarehouse, setDefaultWarehouse] = useState(1);
+
   useEffect(() => {
     setUpdateOnSave(false)
 
@@ -210,7 +253,7 @@ const Page = () => {
     if (status === "authenticated" && session?.accessToken) {
       const fetchData = async () => {
         try {
-          const response = await axios.get("http://localhost:8080/api/aggregator/stock", {
+          const response = await axios.get("http://localhost:8080/api/aggregator/ " + defaultWarehouse + "/stock", {
             xsrfCookieName: "next-auth.csrf-token",
             headers: {
               //@ts-ignore
@@ -267,7 +310,7 @@ const Page = () => {
       // @ts-ignore
       setError(new Error("User is not authenticated"));
     }
-  }, [session, status, updateOnSave]); // Run effect only when session or status changes
+  }, [session, status, updateOnSave, defaultWarehouse]); // Run effect only when session or status changes
 
   // Loading state
   if (loading) {
@@ -278,29 +321,38 @@ const Page = () => {
   // @ts-ignore
   return (
     <div>
-      <Toast open={saveSuccess} />
+      <Toast open={saveSuccess}/>
       <Backdrop
-        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+        sx={(theme) => ({color: '#fff', zIndex: theme.zIndex.drawer + 1})}
         open={backdrop}
       >
-        <CircularProgress color="inherit" />
+        <CircularProgress color="inherit"/>
       </Backdrop>
       <Backdrop
-        sx={() => ({ color: '#fff', zIndex: 9999 })}
+        sx={() => ({color: '#fff', zIndex: 9999})}
         open={backdropSave}
       >
-        <CircularProgress color="inherit" />&nbsp; Saving...
+        <CircularProgress color="inherit"/>&nbsp; Saving...
       </Backdrop>
       <h1>Stock Dashboard</h1>
       <p>Management Board</p>
-      <br />
+      <br/>
+
+      <Grid container>
+        <Grid item xs={12} md={2}>
+          <WarehouseDropdown disabled={false} defaultWarehouse={defaultWarehouse} warehouses={warehouses}
+                             onItemSelect={onDefaultWarehouseChange} includeAll={false} />
+        </Grid>
+      </Grid>
+      <br/>
+
       <Button variant="contained" startIcon={<i className={"ri-add-circle-line"}></i>}
               color="info" onClick={() => setOpen(true)}>New Entry / Exit</Button>
-      <br /><br />
+      <br/><br/>
       {/* Pass fetched data to child components */}
-      {statistics && <LogisticsStatisticsCardEvolved data={statistics} />}
-      <br />
-      <StockTable />
+      {statistics && <LogisticsStatisticsCardEvolved data={statistics}/>}
+      <br/>
+      <StockTable warehouse={defaultWarehouse} />
 
       <Dialog maxWidth={"md"} fullWidth={true} onClose={handleDialogClose} open={open}>
         <DialogTitle>
@@ -309,7 +361,7 @@ const Page = () => {
             aria-label='close'
             onClick={handleClose}
             className='absolute top-2.5 right-2.5 text-[var(--mui-palette-grey-500)]'>
-            <i className='ri-close-line' />
+            <i className='ri-close-line'/>
           </IconButton>
         </DialogTitle>
         <DialogContent>
@@ -318,7 +370,7 @@ const Page = () => {
           </DialogContentText>
           <br/>
           <Grid container spacing={6}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <FormControl fullWidth={true}>
                 <InputLabel id="entry-label">Type of Entry</InputLabel>
                 <Select
@@ -340,15 +392,19 @@ const Page = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <ItemDropdown availableItems={availableItems} onItemSelect={onItemSelect}/>
             </Grid>
+            <Grid item xs={12} md={4}>
+              <ItemVariantDropdown disabled={variantDisabled} availableItems={availableVariants}
+                                   onVariantSelect={onVariantSelect}/>
+            </Grid>
           </Grid>
-          <br />
+          <br/>
           <Grid container spacing={6}>
-           <Grid item xs={12}>
-             <Divider className='m-0 font-bold'>Pricing Details</Divider>
-           </Grid>
+            <Grid item xs={12}>
+              <Divider className='m-0 font-bold'>Pricing Details</Divider>
+            </Grid>
             <Grid item xs={12} md={3}>
               <FormControl>
                 <InputLabel htmlFor='costPrice'>Cost Price</InputLabel>
@@ -356,12 +412,13 @@ const Page = () => {
                   onChange={handleTextFieldChange}
                   label='Cost Price'
                   id='costPrice'
-                  disabled={selectedItem == ""}
+                  placeholder={costPrice == null ? "0.00" : costPrice.toString() + " €"}
+                  disabled={selectedVariant == "" || disabledByExitEntry}
                   endAdornment={<InputAdornment position='end'>€</InputAdornment>}
                 />
-                { costPrice && costPrice != 0 ?
+                {costPrice && costPrice != 0 ?
                   <FormHelperText>Current Price: {costPrice} €</FormHelperText>
-                  : <></> }
+                  : <></>}
               </FormControl>
             </Grid>
             <Grid item xs={12} md={3}>
@@ -371,70 +428,90 @@ const Page = () => {
                   onChange={handleTextFieldChange}
                   label='Retail Price'
                   id='retailPrice'
-                  disabled={selectedItem == ""}
+                  disabled={selectedVariant == "" || disabledByExitEntry}
                   endAdornment={<InputAdornment position='end'>€</InputAdornment>}
-                  placeholder={retailPrice == null ? "0.00" : retailPrice.toString()}
+                  placeholder={retailPrice == null ? "0.00" : retailPrice.toString() + " €"}
                 />
-                { retailPrice && retailPrice != 0 ?
+                {retailPrice && retailPrice != 0 ?
                   <FormHelperText>Current Price: {retailPrice} €</FormHelperText>
-                  : <></> }
+                  : <></>}
               </FormControl>
             </Grid>
             <Grid item xs={12} md={3}>
               <FormControl>
                 <InputLabel htmlFor='salePrice'>PVP</InputLabel>
                 <OutlinedInput
-                  disabled={selectedItem == ""}
+                  disabled={selectedVariant == "" || disabledByExitEntry}
                   onChange={handleTextFieldChange}
                   label='PVP'
                   id='salePrice'
                   endAdornment={<InputAdornment position='end'>€</InputAdornment>}
-                  placeholder={salePrice == null ? "0.00" : salePrice.toString()}
+                  placeholder={salePrice == null ? "0.00" : salePrice.toString() + " €"}
                 />
-                { salePrice && salePrice != 0 ?
+                {salePrice && salePrice != 0 ?
                   <FormHelperText>Current Price: {salePrice} €</FormHelperText>
-                  : <></> }
+                  : <></>}
               </FormControl>
             </Grid>
             <Grid item xs={12} md={3}>
-              <UnitDropdown disabled={true} units={units} onItemSelect={onUnitSelect} defaultUnit={selectedUnit} />
+              <UnitDropdown disabled={true} units={units} onItemSelect={onUnitSelect} defaultUnit={selectedUnit}/>
             </Grid>
           </Grid>
-          <br />
+          <br/>
           <Grid container spacing={6}>
             <Grid item xs={12}>
               <Divider className='m-0 font-bold'>Details</Divider>
             </Grid>
             <Grid item xs={12} md={2}>
-              <TextField disabled={selectedItem == ""} required onChange={handleTextFieldChange} fullWidth id='quantity' type={"number"}
+              <TextField disabled={selectedVariant == ""} required onChange={handleTextFieldChange} fullWidth
+                         id='quantity' type={"number"}
                          label='Quantity'/>
             </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField disabled={selectedItem == ""} fullWidth onChange={handleTextFieldChange} id='batch' autoCapitalize={"on"} type={"text"}
+            <Grid item xs={12} md={3}>
+              <TextField disabled={selectedVariant == ""} fullWidth onChange={handleTextFieldChange} id='batch'
+                         autoCapitalize={"on"} type={"text"}
                          label='Batch'/>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <WarehouseDropdown disabled={selectedItem == ""} warehouses={warehouses} onItemSelect={onWarehouseSelect} defaultWarehouse={selectedWarehouse}/>
+            <Grid item xs={12} md={3}>
+              <TextField disabled={selectedVariant == ""} fullWidth onChange={handleTextFieldChange} id='orderId'
+                         autoCapitalize={"on"} type={"text"}
+                         label='Order ID #'/>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <WarehouseDropdown disabled={selectedVariant == ""} warehouses={warehouses}
+                                 onItemSelect={onWarehouseSelect} defaultWarehouse={selectedWarehouse}
+                                 includeAll={false} />
             </Grid>
           </Grid>
           <Grid container spacing={6}>
             <Grid item xs={6}></Grid>
             <Grid item xs={12} md={6}>
-              { !customsRegistered ? <><br />
-              <Alert severity={"warning"}>This is not a customs registered warehouse.</Alert></> : <></> }
+              {!customsRegistered ? <><br/>
+                <Alert severity={"warning"}>This is not a customs registered warehouse.</Alert></> : <></>}
             </Grid>
           </Grid>
           <br/>
           <Grid container spacing={6}>
             <Grid item xs={12}>
-              <TextField disabled={selectedItem == ""} fullWidth multiline rows={2} onChange={handleTextFieldChange} id='notes' label={"Notes"}/>
+              <TextField disabled={selectedVariant == ""} fullWidth multiline rows={2} onChange={handleTextFieldChange}
+                         id='notes' label={"Notes"}/>
             </Grid>
           </Grid>
           <br/>
           <Grid container spacing={6}>
-            <Grid item xs={12} md={8}>
-              { backendErrors ?
-                <Alert severity='error'>{backendErrors}</Alert> : <></> }
+            <Grid item xs={12} md={4}>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DemoContainer components={['DatePicker']}>
+                  <DatePicker
+                    label="Expiration Date"
+                    format={"DD-MM-YYYY"}
+                    // @ts-ignore
+                    onChange={(value) => setExpiryDate(value)}
+                  />
+                </DemoContainer>
+              </LocalizationProvider>
             </Grid>
             <Grid item xs={12} md={4}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -449,12 +526,20 @@ const Page = () => {
               </LocalizationProvider>
             </Grid>
           </Grid>
+          {backendErrors ?
+            <><br />
+            <Grid container space={6}>
+              <Grid item xs={12} md={12}>
+                  <Alert severity='error'>{backendErrors}</Alert>
+              </Grid>
+            </Grid></> : <></>
+          }
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} variant='outlined' color='error'>
             Discard
           </Button>
-          <Button disabled={selectedItem == ""} onClick={handleSave} variant='contained' color='success'>
+          <Button disabled={selectedVariant == ""} onClick={handleSave} variant='contained' color='success'>
             Save
           </Button>
         </DialogActions>

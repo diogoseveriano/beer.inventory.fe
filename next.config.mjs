@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: '/inventory',
+        destination: '/inventory_BK',
         permanent: true,
         locale: false
       }

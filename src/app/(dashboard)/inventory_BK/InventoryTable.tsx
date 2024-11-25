@@ -53,7 +53,7 @@ function formatResult(result : any) {
   return r;
 }
 
-const InventoryTable = () => {
+const InventoryTable = (warehouse : number) => {
 
   const { data: session } = useSession();
   const [inventory, setInventory] = useState([]);
