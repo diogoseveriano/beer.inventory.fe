@@ -3,7 +3,8 @@
 const Page = () => {
   return (
     <div>
-      <h1>Items</h1>
+      <h1>Items & Variants</h1>
+      <p>Management Board</p>
       <br />
     </div>
   );

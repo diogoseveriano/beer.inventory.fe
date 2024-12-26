@@ -8,7 +8,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
 
 // Component Imports
-import {Menu, MenuItem, MenuSection} from '@menu/vertical-menu'
+import {Menu, MenuItem, MenuSection, SubMenu} from '@menu/vertical-menu'
 
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
@@ -74,23 +74,24 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <MenuSection label={"Management"} icon={<i className='ri-stock-line' />} />
-        <MenuItem href='/items' icon={<i className='ri-list-check' />}>
-          Items
-        </MenuItem>
-        <MenuItem href='/inventory' icon={<i className='ri-stock-line' />}>
-          Inventory
-        </MenuItem>
-        <MenuItem href='/stock' icon={<i className='ri-beer-fill' />}>
-          Stock
-        </MenuItem>
-        <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
-          Purchase Orders
+        <SubMenu icon={<i className='ri-list-check' />} label={"Items & Variants"}>
+          <MenuItem href={"/items/categories"}>Item Categories</MenuItem>
+          <MenuItem href={"/items"}>Item & Variants</MenuItem>
+        </SubMenu>
+        <MenuItem href='/batches' icon={<i className='ri-list-check' />}>
+          Batches
         </MenuItem>
         <MenuItem href='/productions' icon={<i className='ri-shopping-cart-line' />}>
           Productions
         </MenuItem>
-        <MenuItem href='/warehouses' icon={<i className='ri-database-line' />}>
-          Warehouses
+        <MenuItem href='/stock' icon={<i className='ri-beer-fill' />}>
+          Stock
+        </MenuItem>
+        <MenuItem href='/inventory' icon={<i className='ri-stock-line' />}>
+          Inventory
+        </MenuItem>
+        <MenuItem href='/purchase-orders' icon={<i className='ri-shopping-cart-line' />}>
+          Purchase Orders
         </MenuItem>
         <MenuItem href='/suppliers' icon={<i className='ri-box-1-fill' />}>
           Suppliers
@@ -101,6 +102,9 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         <MenuSection label={"Configurations"} icon={<i className='ri-tools-line' />} />
         <MenuItem href='/company' icon={<i className='ri-tools-line' />}>
           Company Settings
+        </MenuItem>
+        <MenuItem href='/warehouses' icon={<i className='ri-database-line' />}>
+          Warehouses
         </MenuItem>
         { session?.user && session.user.role == 'ADMIN' ?
         <MenuItem href='/users' icon={<i className='ri-user-fill' />}>
